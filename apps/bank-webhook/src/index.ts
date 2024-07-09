@@ -7,6 +7,7 @@ app.use(express.json())
 app.post("/hdfcWebhook", async (req, res) => {
     //TODO: Add zod validation here?
     //TODO: HDFC bank should ideally send us a secret so we know this is sent by them
+
     const paymentInformation: {
         token: string;
         userId: string;
@@ -18,30 +19,44 @@ app.post("/hdfcWebhook", async (req, res) => {
     };
 
     try {
-        await db.$transaction([
-            db.balance.updateMany({
-                where: {
-                    userId: Number(paymentInformation.userId)
-                },
-                data: {
-                    amount: {
-                        // You can also get this from your DB
-                        increment: Number(paymentInformation.amount)
-                    }
-                }
-            }),
-            db.onRampTransaction.updateMany({
-                where: {
-                    token: paymentInformation.token
-                }, 
-                data: {
-                    status: "Success",
-                }
-            })
-        ]);
+        const txn = await db.onRampTransaction.findFirst({
+            where : {
+                token : paymentInformation.token
+            }
+        });
 
+        if(txn?.status === "Success"){
+            res.json({
+                msg : "The amount has already been added to wallet"
+            });
+            return;
+        }
+        else{
+            await db.$transaction([
+                db.balance.updateMany({
+                    where: {
+                        userId: Number(paymentInformation.userId)
+                    },
+                    data: {
+                        amount: {
+                            // You can also get this from your DB
+                            increment: Number(paymentInformation.amount)
+                        }
+                    }
+                }),
+                db.onRampTransaction.updateMany({
+                    where: {
+                        token: paymentInformation.token
+                    }, 
+                    data: {
+                        status: "Success",
+                    }
+                })
+            ]);
+            
+        }
         res.json({
-            message: "Captured"
+            message: "Amount updated"
         })
     } catch(e) {
         console.error(e);
