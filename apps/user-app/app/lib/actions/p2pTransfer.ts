@@ -4,11 +4,8 @@ import { getServerSession } from "next-auth"
 import { authOptions } from "../auth"
 import prisma from "@repo/db/client";
 
-export const sendMoney = async (number : string, amount : number) =>{
+export const p2pTransfer = async (number : string, amount : number) =>{
     const session = await getServerSession(authOptions);
-    
-    console.log(number)
-    // console.log(amount)
     const from = session.user.id;
     
     if(!from){
@@ -22,7 +19,7 @@ export const sendMoney = async (number : string, amount : number) =>{
             number
         }
     });
-
+    
     if(!toUser){
         return {
             msg : "User not found"
@@ -31,13 +28,14 @@ export const sendMoney = async (number : string, amount : number) =>{
 
     try {
         await prisma.$transaction(async (txn)=>{
+            await txn.$queryRaw`SELECT  * FROM "Balance" WHERE "userId" = ${Number(from)} FOR UPDATE`;
             const fromBalance = await txn.balance.findUnique({
                 where : {
                     userId : Number(from)
                 }
             });
             if(!fromBalance || fromBalance.amount < amount) throw new Error("Insufficient funds");
-
+            
             await txn.balance.update({
                 where: {userId : Number(from)},
                 data : {
@@ -56,9 +54,14 @@ export const sendMoney = async (number : string, amount : number) =>{
                 }
             });
 
-            // return {
-            //     msg : "Transaction completed"
-            // }
+            await txn.p2pTransfer.create({
+                data :{
+                    amount,
+                    timestamp : new Date(),
+                    fromUserId : Number(from),
+                    toUserId  : toUser.id
+                }
+            })
         })
     } catch (error : any) {
         console.error(error.message);
