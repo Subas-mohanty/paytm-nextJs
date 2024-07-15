@@ -6,7 +6,7 @@ import prisma from "@repo/db/client";
 
 export const CreateOnRampTransaction = async (amount : number, provider : string)=>{
     const session = await getServerSession(authOptions);
-    const userId = session.user.id;
+    const userId = session?.user.id;
     const token = Math.random().toString();
     if(!userId){
         return {
@@ -20,7 +20,7 @@ export const CreateOnRampTransaction = async (amount : number, provider : string
             provider,
             token,
             startTime : new Date(),
-            userId : Number(userId),
+            userId,
             status : "Processing"
         }
     })

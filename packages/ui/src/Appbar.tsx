@@ -15,10 +15,13 @@ export const Appbar = ({
     onSignout
 }: AppbarProps) => {
     return <div className="flex justify-between border-b px-4 border-slate-300">
-        <div className="text-lg flex flex-col justify-center">
+        <div className="text-3xl flex flex-col justify-center font-bold">
             PayTM
         </div>
-        <div className="flex flex-col justify-center pt-2">
+        <div className="flex justify-center pt-2 text-lg font-bold">
+            <div className="flex flex-col justify-center mr-3 pb-2">
+                Hello, {user?.name}
+            </div>
             <Button onClick={user ? onSignout : onSignin}>{user ? "Logout" : "Login"}</Button>
         </div>
     </div>
