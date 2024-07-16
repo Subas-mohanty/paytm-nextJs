@@ -14,7 +14,7 @@ const SUPPORTED_BANKS = [{
     redirectUrl: "https://www.axisbank.com/"
 }];
 
-export const AddMoney = () => {
+export const AddMoneyCard = () => {
     const [redirectUrl, setRedirectUrl] = useState(SUPPORTED_BANKS[0]?.redirectUrl);
     const [amount, setAmount] = useState(0);
     const [provider, setProvider] = useState(SUPPORTED_BANKS[0]?.name || "");
@@ -35,12 +35,36 @@ export const AddMoney = () => {
         }))} />
         <div className="flex justify-center pt-4">
             <Button onClick={async () => {
-                await CreateOnRampTransaction(amount * 100, provider); 
-                window.location.href = redirectUrl || "";
+                // window.location.href = redirectUrl || "";
+                if(!amount || amount < 1 || !redirectUrl){
+                    alert('Please Enter a valid amount')
+                }
+                else{
+                    const intAmount = generateIntAmount(amount);
+                    await CreateOnRampTransaction(intAmount, provider);
+                    alert(`Successfully added ${intAmount / 100}`)
+                    location.reload()
+                }
             }}>
             Add Money
             </Button>
         </div>
     </div>
 </Card>
+}
+
+// converting 12.67 to 1267
+function generateIntAmount(amount: number){
+    const stringAmount = amount.toString();
+    const values = stringAmount.split(".");
+    const finalAmount = Number(values[0]) * 100;
+    if(!values[1]) return finalAmount;
+    else{
+        const decimalValue = values[1];
+        if (decimalValue.length === 1) {
+            return finalAmount + (Number(decimalValue.charAt(0)) * 10);
+        } else {
+            return finalAmount + Number(decimalValue.charAt(0) + decimalValue.charAt(1));
+        }
+    }
 }

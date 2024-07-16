@@ -20,7 +20,7 @@ model User {
 }
 
 model p2pTransfer {
-  id         Int          @id @default(autoincrement())
+  id         String          @id @default(uuid())
   amount     Int
   timestamp  DateTime
   fromUserId String
@@ -48,7 +48,7 @@ model OnRampTransaction {
 }
 
 model Balance {
-  id     Int  @id @default(autoincrement())
+  id     String  @id @default(uuid())
   userId String  @unique
   amount Int
   locked Int

@@ -2,29 +2,55 @@
 
 import { getServerSession } from "next-auth"
 import { authOptions } from "../auth"
-import prisma from "@repo/db/client";
+import db from "@repo/db/client"
 
 export const CreateOnRampTransaction = async (amount : number, provider : string)=>{
     const session = await getServerSession(authOptions);
-    const userId = session?.user.id;
-    const token = Math.random().toString();
-    if(!userId){
+    console.log(amount);
+    
+    const token = (Math.random() * 1000000).toString();
+    if (!session?.user || !session.user?.id) {
         return {
-            msg : "User is not logged in"
+            message: "Unauthenticated request"
         }
     }
     
-    await prisma.onRampTransaction.create({
-        data : {
-            amount,
-            provider,
-            token,
-            startTime : new Date(),
-            userId,
-            status : "Processing"
+    try {
+        const userId = session.user.id;
+
+        await db.$transaction([
+
+            db.onRampTransaction.create({
+                data :{
+                    status: 'Processing',
+                    token,
+                    provider,
+                    amount,
+                    userId,
+                    startTime: new Date(),
+                }
+            }),
+
+            db.balance.updateMany({
+                where : {
+                    userId,
+                },
+                data :{
+                    locked : {
+                        increment : amount
+                    }
+                }
+            }) 
+        ]);
+
+        return {
+            message : "done"
         }
-    })
-    return {
-        msg : "On ramp transaction added"
+
+    } catch (error) {
+        console.log(error);
+        return ({
+            message: "Error while updating data"
+        })
     }
 }

@@ -10,9 +10,9 @@ export const AddMoney = () => {
   const [amount, setAmount] = useState(0);
   const [number, setNumber] = useState("");
   return (
-    <div className="h-[90vh]">
+    <div className="w-full">
       <Center>
-        <Card title="Send">
+        <Card title="Send Money">
           <div className="min-w-72 pt-2">
             <TextInput
               label={"Phone number"}
@@ -30,8 +30,22 @@ export const AddMoney = () => {
             />
             <div className="flex justify-center pt-4">
               <Button onClick={async () => {
-                await p2pTransfer(number, Number(amount)*100);
-                alert(`${amount} rs sent to ${number}`);
+                try {
+                  if (!amount || amount < 1) {
+                      alert("Error: Please enter valid input")
+                  } else {
+                      const result = await p2pTransfer(number, amount * 100);
+                      console.log(result)
+                      if (result && result.msg === "Transfer successful") {
+                          alert("Transfer successful");
+                          location.reload();
+                      } else {
+                          alert("Error: " + (result && result.msg ? result.msg : "Unknown error"));
+                      }
+                  }
+              } catch (error) {
+                  console.log(error)
+              }
               }}>Send Money</Button>
             </div>
           </div>

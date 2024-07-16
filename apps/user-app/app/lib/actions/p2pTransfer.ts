@@ -6,7 +6,7 @@ import prisma from "@repo/db/client";
 
 export const p2pTransfer = async (number : string, amount : number) =>{
     const session = await getServerSession(authOptions);
-    const from = session.user.id;
+    const from = session?.user.id;
     
     if(!from){
         return {
@@ -31,13 +31,13 @@ export const p2pTransfer = async (number : string, amount : number) =>{
             await txn.$queryRaw`SELECT  * FROM "Balance" WHERE "userId" = ${Number(from)} FOR UPDATE`;
             const fromBalance = await txn.balance.findUnique({
                 where : {
-                    userId : Number(from)
+                    userId : from
                 }
             });
             if(!fromBalance || fromBalance.amount < amount) throw new Error("Insufficient funds");
             
             await txn.balance.update({
-                where: {userId : Number(from)},
+                where: {userId : from},
                 data : {
                     amount : {
                         decrement : amount
@@ -46,7 +46,7 @@ export const p2pTransfer = async (number : string, amount : number) =>{
             });
 
             await txn.balance.update({
-                where: {userId : Number(toUser.id)},
+                where: {userId : toUser.id},
                 data : {
                     amount : {
                         increment : amount
@@ -58,7 +58,7 @@ export const p2pTransfer = async (number : string, amount : number) =>{
                 data :{
                     amount,
                     timestamp : new Date(),
-                    fromUserId : Number(from),
+                    fromUserId : from,
                     toUserId  : toUser.id
                 }
             })
