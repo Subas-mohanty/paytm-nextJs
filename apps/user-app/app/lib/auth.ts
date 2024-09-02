@@ -14,7 +14,7 @@ export const authOptions = {
       CredentialsProvider({
           name: 'Credentials',
           credentials: {
-            name : {label : "Name", type : "text", placeholder : "subas", required: true},
+            name : {label : "Name", type : "text", placeholder : "John", required: true},
             phone: { label: "Phone number", type: "text", placeholder: "1231231231", required: true },
             password: { label: "Password", type: "password", placeholder: "password", required: true }
           },
@@ -65,9 +65,8 @@ export const authOptions = {
                 }
             } catch(e) {
                 console.error(e);
+                return null
             }
-
-            return null
           },
         })
     ],
